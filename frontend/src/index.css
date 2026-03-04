@@ -1,0 +1,347 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Reset & Variables ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #080c14;
+  --canvas-bg:    #0c1220;
+  --sidebar-bg:   #0a0f1c;
+  --surface:      #111827;
+  --surface-2:    #1a2236;
+  --surface-3:    #1f2d44;
+  --border:       rgba(99, 130, 190, 0.15);
+  --border-2:     rgba(99, 130, 190, 0.28);
+  --accent:       #3b82f6;
+  --accent-2:     #60a5fa;
+  --accent-glow:  rgba(59, 130, 246, 0.25);
+  --teal:         #14b8a6;
+  --text:         #e2e8f0;
+  --text-muted:   #64748b;
+  --text-dim:     #94a3b8;
+  --node-r:       14px;
+  --font-ui:      'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --shadow-node:  0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-glow:  0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+html, body, #root {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── App Shell ─────────────────────────────────────────────── */
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────── */
+.sidebar {
+  width: 72px;
+  min-width: 72px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 6px;
+  z-index: 20;
+  position: relative;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; right: -1px; bottom: 0; width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(59, 130, 246, 0.4) 30%,
+    rgba(20, 184, 166, 0.3) 70%,
+    transparent
+  );
+}
+
+.sidebar-logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--teal) 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+  font-size: 12px; font-weight: 700; color: white; letter-spacing: -0.5px;
+  box-shadow: 0 0 16px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+.sidebar-divider {
+  width: 36px; height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sidebar-label {
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ─── Draggable Nodes ───────────────────────────────────────── */
+.draggable-node {
+  width: 52px; height: 52px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.draggable-node:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  color: var(--accent-2);
+  box-shadow: 0 0 12px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.05);
+  transform: translateY(-1px);
+}
+
+.draggable-node:active { cursor: grabbing; transform: scale(0.95); }
+
+.draggable-node-icon  { font-size: 18px; line-height: 1; }
+.draggable-node-label {
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase; line-height: 1;
+}
+
+/* ─── Pipeline Canvas ───────────────────────────────────────── */
+.pipeline-canvas { flex: 1; position: relative; overflow: hidden; }
+
+.react-flow { background: var(--canvas-bg) !important; }
+
+.react-flow__edge-path {
+  stroke: url(#edge-gradient) !important;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 4px rgba(59,130,246,0.4));
+}
+
+.react-flow__handle {
+  width: 10px !important; height: 10px !important;
+  background: var(--surface-3) !important;
+  border: 2px solid var(--accent) !important;
+  border-radius: 50% !important;
+  transition: all 0.15s ease;
+}
+
+.react-flow__handle:hover {
+  background: var(--accent) !important;
+  box-shadow: 0 0 8px var(--accent-glow) !important;
+  transform: scale(1.3);
+}
+
+.react-flow__controls {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-2) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-node) !important;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  fill: var(--text-muted) !important;
+  width: 32px !important; height: 32px !important;
+  transition: all 0.15s;
+}
+
+.react-flow__controls-button:last-child { border-bottom: none !important; }
+.react-flow__controls-button:hover {
+  background: var(--surface-2) !important;
+  fill: var(--accent-2) !important;
+}
+
+.react-flow__minimap {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-2) !important;
+  border-radius: 12px !important;
+}
+
+.react-flow__minimap-mask  { fill: rgba(8,12,20,0.75) !important; }
+.react-flow__minimap-node  { fill: var(--surface-3) !important; }
+
+/* ─── BaseNode ──────────────────────────────────────────────── */
+.base-node {
+  position: relative;
+  background: linear-gradient(145deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border-2);
+  border-radius: var(--node-r);
+  box-shadow: var(--shadow-node);
+  min-width: 240px;
+  font-family: var(--font-ui);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.base-node:hover {
+  border-color: rgba(99,130,190,0.4);
+  box-shadow: var(--shadow-node), var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.react-flow__node.selected .base-node {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), var(--shadow-node);
+}
+
+.base-node-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--node-r) var(--node-r) 0 0;
+  background: rgba(255,255,255,0.02);
+}
+
+.base-node-header-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  box-shadow: 0 0 6px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+.base-node-title {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.base-node-body {
+  padding: 12px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.base-node-body label {
+  display: block;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 3px;
+}
+
+.base-node-body input,
+.base-node-body select,
+.base-node-body textarea {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+
+.base-node-body input:focus,
+.base-node-body select:focus,
+.base-node-body textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.base-node-body select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.base-node-body textarea {
+  resize: none; overflow: hidden; min-height: 60px; line-height: 1.5;
+}
+
+.node-description {
+  font-size: 11px; color: var(--text-muted);
+  font-style: italic; padding: 4px 2px;
+  font-family: var(--font-mono);
+}
+
+/* ─── Handle Labels ─────────────────────────────────────────── */
+.handle-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 500;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  background: rgba(10, 15, 28, 0.85);
+  padding: 1px 5px;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+/* Push labels fully OUTSIDE the node card */
+.handle-label-left {
+  left: auto;
+  right: calc(100% + 6px);   /* outside left edge */
+  text-align: right;
+}
+
+.handle-label-right {
+  right: auto;
+  left: calc(100% + 6px);    /* outside right edge */
+  text-align: left;
+}
+
+/* ─── Submit Button ─────────────────────────────────────────── */
+.submit-bar {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.submit-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 32px;
+  background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
+  color: #fff;
+  border: none; border-radius: 40px;
+  font-family: var(--font-ui);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(59,130,246,0.4), 0 2px 8px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(59,130,246,0.5), 0 4px 12px rgba(0,0,0,0.4);
+  filter: brightness(1.1);
+}
+
+.submit-btn:active { transform: translateY(0); filter: brightness(0.95); }
+.submit-btn-icon   { font-size: 14px; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
